@@ -1,8 +1,8 @@
 # game3072
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+A [libGDX](https://libgdx.com/) puzzle game generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
 
-This project was generated with a template including simple application launchers and an `ApplicationAdapter` extension that draws libGDX logo.
+This repository implements a sliding tile puzzle inspired by **2048** with a target of 3072. The shared game logic lives in the `core` module and is used by the desktop, Android and iOS launchers.
 
 ## Platforms
 
@@ -10,6 +10,19 @@ This project was generated with a template including simple application launcher
 - `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
 - `android`: Android mobile platform. Needs Android SDK.
 - `ios`: iOS mobile platform using RoboVM.
+
+## Code overview
+
+The `core` module defines the game:
+
+- **`Main`** sets up rendering, input and game state.
+- **`Grid`** holds board values, processes moves and animations.
+- **`Tile`** draws individual numbered tiles.
+- **`GameUtils`** provides small helpers for fonts and drawing.
+- The HUD displays the current score and a persistent **best score** from
+  previous rounds.
+
+Platform folders contain launchers that invoke `Main` on desktop (`lwjgl3`), Android and iOS.
 
 ## Gradle
 
@@ -34,3 +47,13 @@ Useful Gradle tasks and flags:
 
 Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
 For example, `core:clean` removes `build` folder only from the `core` project.
+
+## Running locally
+
+To start the desktop version from the command line:
+
+```bash
+./gradlew lwjgl3:run
+```
+
+Android and iOS launchers can be assembled with the corresponding Gradle tasks once their SDKs are configured.

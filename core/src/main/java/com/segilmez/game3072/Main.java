@@ -49,8 +49,15 @@ public class Main extends ApplicationAdapter {
     private float scoreboardWidth;
     private float scoreboardHeight;
     private BitmapFont scoreFont;
+    private Texture bestScoreTexture;
+    private float bestScoreX;
+    private float bestScoreY;
+    private float bestScoreWidth;
+    private float bestScoreHeight;
+
     private float scoreValue = 0;
     private float targetScore = 0;
+    private float bestScoreValue = 0;
     private float scoreAnimationTime = 0;
     private float scoreIncrement = 100; // Points per second during animation
 
@@ -77,12 +84,22 @@ public class Main extends ApplicationAdapter {
 
         grid = new Grid(4, gridSize, gridX, gridY);
 
-        // Scoreboard setup
+        // Scoreboard and best score setup
         scoreboardTexture = new Texture(Gdx.files.internal("score.png"));
+        bestScoreTexture = new Texture(Gdx.files.internal("best_score.png"));
+
+        float scoreboardSpacing = gridSize * 0.05f;
         scoreboardWidth = gridSize * 0.45f;
         scoreboardHeight = gridSize * 0.45f;
-        scoreboardX = gridX + (gridSize - scoreboardWidth) / 2;
+
+        float boardsTotalWidth = scoreboardWidth * 2 + scoreboardSpacing;
+        scoreboardX = gridX + (gridSize - boardsTotalWidth) / 2;
         scoreboardY = gridY + gridSize + gridSize * 0.05f;
+
+        bestScoreWidth = scoreboardWidth;
+        bestScoreHeight = scoreboardHeight;
+        bestScoreX = scoreboardX + scoreboardWidth + scoreboardSpacing;
+        bestScoreY = scoreboardY;
 
         // Restart button
         restartButtonTexture = new Texture(Gdx.files.internal("restart_game.png"));
@@ -141,6 +158,7 @@ public class Main extends ApplicationAdapter {
     private void initializeGameState() {
         scoreValue = 0;
         targetScore = 0;
+        bestScoreValue = 0;
         gameState = GameState.PLAYING;
     }
 
@@ -183,6 +201,7 @@ public class Main extends ApplicationAdapter {
 
         // Render game elements
         renderScoreboard();
+        renderBestScoreboard();
         grid.render(shapeRenderer, batch, font);
 
         // Render game over if needed
@@ -278,6 +297,41 @@ public class Main extends ApplicationAdapter {
         batch.end();
     }
 
+    private void renderBestScoreboard() {
+        if (batch == null || bestScoreTexture == null || scoreFont == null) {
+            return;
+        }
+
+        batch.begin();
+        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+        batch.draw(
+            bestScoreTexture,
+            bestScoreX,
+            bestScoreY,
+            bestScoreWidth,
+            bestScoreHeight
+        );
+
+        String scoreText = String.valueOf((int) bestScoreValue);
+        GlyphLayout valueLayout = new GlyphLayout(scoreFont, scoreText);
+
+        float maxWidth = bestScoreWidth * 0.7f;
+        if (valueLayout.width > maxWidth) {
+            float scale = maxWidth / valueLayout.width;
+            scoreFont.getData().setScale(scale);
+            valueLayout = new GlyphLayout(scoreFont, scoreText);
+        } else {
+            scoreFont.getData().setScale(1.0f);
+        }
+
+        float valueX = bestScoreX + (bestScoreWidth - valueLayout.width) * 0.5f;
+        float valueY = bestScoreY + (bestScoreHeight + valueLayout.height) * 0.4f;
+        scoreFont.draw(batch, scoreText, valueX, valueY);
+
+        batch.end();
+    }
+
     private void handleInput() {
         if (grid.isAnimating()) return;
 
@@ -323,6 +377,9 @@ public class Main extends ApplicationAdapter {
             targetScore += moveScore;
             scoreIncrement = moveScore * 3;
             scoreAnimationTime = 0;
+            if (targetScore > bestScoreValue) {
+                bestScoreValue = targetScore;
+            }
         }
     }
 
@@ -348,10 +405,18 @@ public class Main extends ApplicationAdapter {
 
         grid = new Grid(4, gridSize, gridX, gridY);
 
+        float scoreboardSpacing = gridSize * 0.05f;
         scoreboardWidth = gridSize * 0.45f;
         scoreboardHeight = gridSize * 0.45f;
-        scoreboardX = gridX + (gridSize - scoreboardWidth) / 2;
+
+        float boardsTotalWidth = scoreboardWidth * 2 + scoreboardSpacing;
+        scoreboardX = gridX + (gridSize - boardsTotalWidth) / 2;
         scoreboardY = gridY + gridSize + gridSize * 0.05f;
+
+        bestScoreWidth = scoreboardWidth;
+        bestScoreHeight = scoreboardHeight;
+        bestScoreX = scoreboardX + scoreboardWidth + scoreboardSpacing;
+        bestScoreY = scoreboardY;
 
         float buttonSize = gridSize * 0.2f;
         restartButton = new Rectangle(
@@ -368,6 +433,7 @@ public class Main extends ApplicationAdapter {
         shapeRenderer.dispose();
         font.dispose();
         scoreboardTexture.dispose();
+        bestScoreTexture.dispose();
         scoreFont.dispose();
         gameOverFont.dispose();
         gameOverSubtitleFont.dispose();
