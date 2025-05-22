@@ -14,6 +14,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFont
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.Preferences;
 
 public class Main extends ApplicationAdapter {
     // Game state
@@ -55,6 +56,7 @@ public class Main extends ApplicationAdapter {
     private float bestScoreboardWidth;
     private float bestScoreboardHeight;
     private float bestScoreValue = 0;
+    private Preferences preferences;
     private BitmapFont scoreFont;
     private float scoreValue = 0;
     private float targetScore = 0;
@@ -66,6 +68,7 @@ public class Main extends ApplicationAdapter {
         initializeRenderingObjects();
         initializeGameElements();
         initializeFonts();
+        initializePreferences();
         initializeGameState();
     }
 
@@ -155,6 +158,11 @@ public class Main extends ApplicationAdapter {
         generator.dispose();
     }
 
+    private void initializePreferences() {
+        preferences = Gdx.app.getPreferences("game3072");
+        bestScoreValue = preferences.getInteger("bestScore", 0);
+    }
+
     private void initializeGameState() {
         scoreValue = 0;
         targetScore = 0;
@@ -183,6 +191,8 @@ public class Main extends ApplicationAdapter {
 
         if (scoreValue > bestScoreValue) {
             bestScoreValue = scoreValue;
+            preferences.putInteger("bestScore", (int) bestScoreValue);
+            preferences.flush();
         }
 
         // Check for game over
@@ -377,6 +387,8 @@ public class Main extends ApplicationAdapter {
 
     private void resetGame() {
         bestScoreValue = Math.max(bestScoreValue, targetScore);
+        preferences.putInteger("bestScore", (int) bestScoreValue);
+        preferences.flush();
 
         float gridSize = Math.min(screenWidth, screenHeight) * 0.8f;
         float startX = (screenWidth - gridSize) / 2;
