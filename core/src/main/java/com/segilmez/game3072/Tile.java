@@ -70,8 +70,10 @@ public class Tile {
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
             Gdx.files.internal("Orbitron/static/Orbitron-Regular.ttf"));
 
+        float density = Gdx.graphics.getDensity();
+
         FreeTypeFontParameter parameter = GameUtils.createFontParameters(
-            20,
+            Math.round(20 * density),
             Color.WHITE,
             1,
             new Color(0.2f, 0.2f, 0.2f, 0.3f)

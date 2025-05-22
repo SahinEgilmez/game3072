@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.Preferences;
 
@@ -63,6 +64,11 @@ public class Main extends ApplicationAdapter {
     private float scoreAnimationTime = 0;
     private float scoreIncrement = 100; // Points per second during animation
 
+    // Touch input
+    private Vector2 swipeStart = new Vector2();
+    private boolean swipeActive = false;
+    private float swipeThreshold;
+
     @Override
     public void create() {
         initializeRenderingObjects();
@@ -78,6 +84,7 @@ public class Main extends ApplicationAdapter {
 
         screenWidth = Gdx.graphics.getWidth();
         screenHeight = Gdx.graphics.getHeight();
+        swipeThreshold = Math.min(screenWidth, screenHeight) * 0.05f;
     }
 
     private void initializeGameElements() {
@@ -119,9 +126,11 @@ public class Main extends ApplicationAdapter {
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
             Gdx.files.internal("Orbitron/static/Orbitron-Regular.ttf"));
 
+        float density = Gdx.graphics.getDensity();
+
         // Score and game fonts
         FreeTypeFontParameter parameter = GameUtils.createFontParameters(
-            24,
+            Math.round(24 * density),
             GameUtils.hexToColor("#776E65"),
             1,
             new Color(0, 0, 0, 0.2f)
@@ -132,7 +141,7 @@ public class Main extends ApplicationAdapter {
 
         // Game over fonts
         FreeTypeFontParameter gameOverParams = GameUtils.createFontParameters(
-            48,
+            Math.round(48 * density),
             GameUtils.hexToColor("#776E65"),
             2,
             new Color(0, 0, 0, 0.3f)
@@ -140,7 +149,7 @@ public class Main extends ApplicationAdapter {
         gameOverFont = generator.generateFont(gameOverParams);
 
         FreeTypeFontParameter subtitleParams = GameUtils.createFontParameters(
-            20,
+            Math.round(20 * density),
             GameUtils.hexToColor("#776E65"),
             0,
             null
@@ -148,7 +157,7 @@ public class Main extends ApplicationAdapter {
         gameOverSubtitleFont = generator.generateFont(subtitleParams);
 
         FreeTypeFontParameter buttonParams = GameUtils.createFontParameters(
-            16,
+            Math.round(16 * density),
             Color.WHITE,
             0,
             null
@@ -366,6 +375,33 @@ public class Main extends ApplicationAdapter {
             moved = grid.moveLeft();
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT) || Gdx.input.isKeyJustPressed(Input.Keys.D)) {
             moved = grid.moveRight();
+        }
+
+        // Touch swipe handling
+        if (!moved) {
+            if (Gdx.input.justTouched()) {
+                swipeStart.set(Gdx.input.getX(), Gdx.input.getY());
+                swipeActive = true;
+            } else if (swipeActive && !Gdx.input.isTouched()) {
+                Vector2 end = new Vector2(Gdx.input.getX(), Gdx.input.getY());
+                float dx = end.x - swipeStart.x;
+                float dy = swipeStart.y - end.y; // invert Y
+
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    if (dx > swipeThreshold) {
+                        moved = grid.moveRight();
+                    } else if (dx < -swipeThreshold) {
+                        moved = grid.moveLeft();
+                    }
+                } else {
+                    if (dy > swipeThreshold) {
+                        moved = grid.moveUp();
+                    } else if (dy < -swipeThreshold) {
+                        moved = grid.moveDown();
+                    }
+                }
+                swipeActive = false;
+            }
         }
 
         if (moved) {
